@@ -40,7 +40,8 @@ class BCHO:
     def getQuotation(self):
         error_times = 0
         try:
-            r = requests.post('https://www.boc.cn/sourcedb/whpj/')
+            r = requests.get('https://www.boc.cn/sourcedb/whpj/')
+            r.encoding = "utf-8"
             print(r.text)
         except:
             print("Internet Error, waiting 2s.\n")

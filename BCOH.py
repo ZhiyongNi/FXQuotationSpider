@@ -15,7 +15,7 @@ from scrapy.selector import Selector
 from tqdm import tqdm
 
 
-class CCBH:
+class BCOH:
     outputmes = ''
 
     CurrencyName = ['英镑', '欧元', '美元', '日元', '港币', '加拿大元', '澳大利亚元']
@@ -40,7 +40,8 @@ class CCBH:
     def getQuotation(self):
         error_times = 0
         try:
-            r = requests.post('http://www1.ccb.com/cn/forex/exchange-quotations.html')
+            r = requests.get('https://bankcomm.com/BankCommSite/zonghang/cn/whpj/foreignExchangeSearch_Cn.jsp')
+            r.encoding = "utf-8"
             print(r.text)
         except:
             print("Internet Error, waiting 2s.\n")
@@ -55,8 +56,6 @@ class CCBH:
                 exit()
 
         html = r.text
-
-        print(html)
 
         for row in range(2, end):
             try:
