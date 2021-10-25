@@ -5,7 +5,8 @@
 from BCHO import BCHO
 from BCOH import BCOH
 from CCBH import CCBH
-from CZSB import CZSB
+from FXQuotationSpider import FXQuotationSpider
+
 from NBCB import NBCB
 
 
@@ -19,9 +20,4 @@ if __name__ == '__main__':
     print_hi('PyCharm')
 
     # See PyCharm help at https://www.jetbrains.com/help/pycharm/
-
-    sd = CZSB()
-    #sd.setSleepTime(5)
-    example01 = sd.getQuotation()
-
-    print(example01)
+    FXQuotationSpider().QuotationSpiderCommand('start')

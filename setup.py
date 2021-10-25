@@ -10,7 +10,7 @@ setup(
     author_email='',
     description='Easy API to get foreign exchange rate from Bank of China.',
 
-    install_requires=['requests', 'scrapy', 'tqdm', 'prettytable', 'numpy', 'matplotlib', ],
+    install_requires=['requests', 'scrapy', 'tqdm', 'prettytable', 'numpy', 'matplotlib', 'mysql-connector-python'],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
