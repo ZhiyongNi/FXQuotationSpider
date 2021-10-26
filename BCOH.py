@@ -4,15 +4,11 @@
 # 
 
 import datetime
-import os
 import re
 import time as tm
-from concurrent.futures import ThreadPoolExecutor
 
 import requests
-from bocfx import show_prog, page_get
 from scrapy.selector import Selector
-from tqdm import tqdm
 
 
 class BCOH:

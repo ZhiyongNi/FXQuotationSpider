@@ -3,17 +3,11 @@
 # 
 # 
 
-import datetime
-import os
-import re
 import time
 import datetime
-from concurrent.futures import ThreadPoolExecutor
 
 import requests
-from bocfx import show_prog, page_get
 from scrapy.selector import Selector
-from tqdm import tqdm
 
 from QuotationDict import QuotationDict
 

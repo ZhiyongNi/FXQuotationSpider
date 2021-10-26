@@ -5,13 +5,10 @@
 
 import datetime
 import os
-import re
 import time
 import time as tm
-from concurrent.futures import ThreadPoolExecutor
 
 import requests
-from bocfx import show_prog, page_get
 from scrapy.selector import Selector
 from tqdm import tqdm
 
@@ -103,3 +100,15 @@ class NBCB:
                 print('NBCB Spider RownNum_' + str(row) + ' is endness.')
                 break
         return QuotationList
+
+
+[{'currencyType': '978', 'buyPrice': '738.13', 'selPrice': '743.68', 'midPrice': '741.47', 'cashBuyPrice': '713.33',
+  'cashSellPrice': '743.68', 'disRate': '1.1603', 'valDate': '2021-10-26', 'valTime': '16:14:00'},
+ {'currencyType': '392', 'buyPrice': '5.5781', 'selPrice': '5.6185', 'midPrice': '5.617', 'cashBuyPrice': '5.3981',
+  'cashSellPrice': '5.6185', 'disRate': '0.0089', 'valDate': '2021-10-26', 'valTime': '16:14:00'},
+ {'currencyType': '826', 'buyPrice': '875.62', 'selPrice': '881.88', 'midPrice': '879.09', 'cashBuyPrice': '847.62',
+  'cashSellPrice': '881.88', 'disRate': '1.3431', 'valDate': '2021-10-26', 'valTime': '16:14:00'},
+ {'currencyType': '840', 'buyPrice': '636.86', 'selPrice': '639.66', 'midPrice': '638.9', 'cashBuyPrice': '631.58',
+  'cashSellPrice': '639.72', 'disRate': '1', 'valDate': '2021-10-26', 'valTime': '16:14:00'},
+ {'currencyType': '344', 'buyPrice': '81.931', 'selPrice': '82.232', 'midPrice': '82.175', 'cashBuyPrice': '81.251',
+  'cashSellPrice': '82.232', 'disRate': '0.1285', 'valDate': '2021-10-26', 'valTime': '16:12:00'}]

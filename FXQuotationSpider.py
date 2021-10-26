@@ -50,7 +50,7 @@ class FXQuotationSpider:
                 self.QuotationList += NBCBFuture.result()
                 self.QuotationList += TLCBFuture.result()
 
-                QuotationDB.addQuotationtoDB(self.QuotationList)
+                ##QuotationDB.addQuotationtoDB(self.QuotationList)
 
                 while True:
                     self.QuotationList = []
@@ -69,7 +69,7 @@ class FXQuotationSpider:
                         try:
                             if QuotationDictCell.BankName == 'BCHO' and QuotationDictCell.CurrencyCode == 'USD':
                                 BCHO_SE_Bid = QuotationDictCell.SE_Bid
-                            elif QuotationDictCell.BankName == 'NBCB' and QuotationDictCell.CurrencyCode == 'USD':
+                            elif QuotationDictCell.BankName == 'TLCB' and QuotationDictCell.CurrencyCode == 'USD':
                                 TLCB_SE_Bid = QuotationDictCell.SE_Bid
                             else:
                                 pass

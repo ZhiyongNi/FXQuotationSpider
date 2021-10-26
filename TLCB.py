@@ -4,22 +4,18 @@
 # 
 
 import datetime
-import os
-import re
+import json
 import time
 import time as tm
-from concurrent.futures import ThreadPoolExecutor
 
 import requests
-from bocfx import show_prog, page_get
 from scrapy.selector import Selector
-from tqdm import tqdm
 
 from QuotationDict import QuotationDict
 
 
 class TLCB:
-    CurrencyNameList = ['英镑', '欧元', '美元', '日元', '港币']
+    CurrencyNameList = ['826', '978', '840', '392', '344']
     CurrencyCodeList = ['GBP', 'EUR', 'USD', 'JPY', 'HKD']
 
     SleepTime = -1
@@ -46,58 +42,52 @@ class TLCB:
     def getQuotation(self):
         error_times = 0
         try:
-            r = requests.get('https://ebank.zjtlcb.com/perbank/html/beforeLogin/exchangeRateQuery1.htm')
+            r = requests.post('https://ebank.zjtlcb.com/perbank/PB0000_currencyRate.do',
+                              data={'trxCode': 'PB0000', 'tranFlag': '1', 'format': 'JSON', 'srcChannel': 'WEB'})
             r.encoding = "utf-8"
         except:
             print("Internet Error, waiting 2s.\n")
             error_times += 1
             tm.sleep(2)
             while error_times <= 3:
-                r = requests.get('https://ebank.zjtlcb.com/perbank/html/beforeLogin/exchangeRateQuery1.htm')
+                r = requests.post('https://ebank.zjtlcb.com/perbank/PB0000_currencyRate.do',
+                                  data={'trxCode': 'PB0000', 'tranFlag': '1', 'format': 'JSON', 'srcChannel': 'WEB'})
             else:
                 print("Retry 3 times, break!")
                 exit()
 
         html = r.text
+        text = json.loads(html)
+
         QuotationList = []
 
-        for row in range(1, self.EndRow):
+        for row in text['cd']['exchangeRateList']:
             try:
-                if row == 1 and Selector(text=html).xpath('//tr[%i]/th[1]/text()' % (row)).extract()[0] != '币种' and \
-                        Selector(text=html).xpath('//tr[%i]/th[2]/text()' % (row)).extract()[0] != '中间价' and \
-                        Selector(text=html).xpath('//tr[%i]/th[3]/text()' % (row)).extract()[0] != '现汇买入价' and \
-                        Selector(text=html).xpath('//tr[%i]/th[4]/text()' % (row)).extract()[0] != '现钞买入价' and \
-                        Selector(text=html).xpath('//tr[%i]/th[5]/text()' % (row)).extract()[0] != '卖出价' and \
-                        Selector(text=html).xpath('//tr[%i]/th[6]/text()' % (row)).extract()[0] != '发布日期' and \
-                        Selector(text=html).xpath('//tr[%i]/th[7]/text()' % (row)).extract()[0] != '发布时间':
-                    print('table fault')
-                    exit()
-                elif Selector(text=html).xpath('//tr[%i]/td[1]/text()' % (row)).extract()[0] in self.CurrencyCodeList:
-                    CurrencyCode = Selector(text=html).xpath('//tr[%i]/td[1]/text()' % (row)).extract()[0]
-                    SE_Bid = Selector(text=html).xpath('//tr[%i]/td[3]/text()' % (row)).extract()[0]
-                    BN_Bid = Selector(text=html).xpath('//tr[%i]/td[4]/text()' % (row)).extract()[0]
-                    SE_Ask = Selector(text=html).xpath('//tr[%i]/td[5]/text()' % (row)).extract()[0]
-                    BN_Ask = Selector(text=html).xpath('//tr[%i]/td[5]/text()' % (row)).extract()[0]
-                    TimeStamp = datetime.datetime.strptime(
-                        Selector(text=html).xpath('//tr[%i]/td[6]/text()' % (row)).extract()[0] + '' +
-                        Selector(text=html).xpath('//tr[%i]/td[7]/text()' % (row)).extract()[0], "%Y-%m-%d %H:%M:%S")
+                if 'currencyType' in row and 'buyPrice' in row and 'selPrice' in row and 'midPrice' in row \
+                        and 'cashBuyPrice' in row and 'cashSellPrice' in row and 'disRate' in row and 'valDate' in row \
+                        and 'valTime' in row:
+                    print('TLCB Spider RownNum_' + str(len(text['cd']['exchangeRateList'])) + ' is endness.')
 
                     # QuotationDict = {'BankName', 'CurrencyName', 'TimeStamp', 'SE_Bid', 'SE_Ask', 'BN_Bid', 'BN_Ask'}
                     QuotationDictTmp = QuotationDict()
                     QuotationDictTmp.BankName = 'TLCB'
-                    QuotationDictTmp.CurrencyCode = CurrencyCode
-                    QuotationDictTmp.TimeStamp = TimeStamp
-                    QuotationDictTmp.SE_Bid = SE_Bid
-                    QuotationDictTmp.SE_Ask = SE_Ask
-                    QuotationDictTmp.BN_Bid = BN_Bid
-                    QuotationDictTmp.BN_Ask = BN_Ask
+                    QuotationDictTmp.CurrencyCode = self.CurrencyCodeList[
+                        self.CurrencyNameList.index(row['currencyType'])]
+                    QuotationDictTmp.TimeStamp = datetime.datetime.strptime(
+                        row['valDate'] + '_' + row['valTime'], "%Y-%m-%d_%H:%M:%S")
+                    QuotationDictTmp.SE_Bid = row['buyPrice']
+                    QuotationDictTmp.SE_Ask = row['selPrice']
+                    QuotationDictTmp.BN_Bid = row['cashBuyPrice']
+                    QuotationDictTmp.BN_Ask = row['cashSellPrice']
                     QuotationDictTmp.CurrencyUnit = 100
 
+                    print(QuotationDictTmp.__dict__)
                     QuotationList.append(QuotationDictTmp)
                 else:
-                    CurrencyName = Selector(text=html).xpath('//tr[%i]/td[1]/text()' % (row)).extract()[0]
+                    print('table fault')
+                    exit()
 
             except IndexError:
-                print('TLCB Spider RownNum_' + str(row) + ' is endness.')
+
                 break
         return QuotationList
