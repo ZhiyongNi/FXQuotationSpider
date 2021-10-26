@@ -9,16 +9,20 @@ import os
 import re
 import time
 import time as tm
+
 from concurrent.futures import ThreadPoolExecutor
 
 import requests
+from xml.dom.minidom import parse
+import xml.dom.minidom
+
 from scrapy.selector import Selector
 from tqdm import tqdm
 
 from QuotationDict import QuotationDict
 
 
-class ICBC:
+class ABCI:
     CurrencyNameList = ['英镑', '欧元', '美元', '日元', '港币', '加拿大元', '澳大利亚元']
     CurrencyCodeList = ['GBP', 'EUR', 'USD', 'JPY', 'HKD', 'CAD', 'AUD']
 
@@ -46,29 +50,29 @@ class ICBC:
     def getQuotation(self):
         error_times = 0
         try:
-            r = requests.get('https://papi.icbc.com.cn/icbc/iepa/oproxy/rest/nsexchanges/latest')
+            r = requests.get('https://ewealth.abchina.com/app/data/api/DataService/ExchangeRateV2')
             r.encoding = "utf-8"
         except:
             print("Internet Error, waiting 2s.\n")
             error_times += 1
             tm.sleep(2)
             while error_times <= 3:
-                r = requests.get('https://papi.icbc.com.cn/icbc/iepa/oproxy/rest/nsexchanges/latest')
+                r = requests.get('https://ewealth.abchina.com/app/data/api/DataService/ExchangeRateV2')
             else:
                 print("Retry 3 times, break!")
                 exit()
-
         html = r.text
-        text = json.loads(html)
 
         QuotationList = []
+        print(html)
 
-        for row in text['data']:
+        for row in html['Data']['Table']:
+            print(row)
+
             try:
                 if 'currencyType' in row and 'currencyCHName' in row and 'currencyENName' in row and 'reference' in row \
                         and 'foreignBuy' in row and 'foreignSell' in row and 'cashBuy' in row and 'cashSell' in row \
                         and 'publishDate' in row and 'publishTime' in row:
-
 
                     # QuotationDict = {'BankName', 'CurrencyName', 'TimeStamp', 'SE_Bid', 'SE_Ask', 'BN_Bid', 'BN_Ask'}
                     QuotationDictTmp = QuotationDict()

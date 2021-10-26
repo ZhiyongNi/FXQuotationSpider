@@ -66,7 +66,6 @@ class TLCB:
                 if 'currencyType' in row and 'buyPrice' in row and 'selPrice' in row and 'midPrice' in row \
                         and 'cashBuyPrice' in row and 'cashSellPrice' in row and 'disRate' in row and 'valDate' in row \
                         and 'valTime' in row:
-                    print('TLCB Spider RownNum_' + str(len(text['cd']['exchangeRateList'])) + ' is endness.')
 
                     # QuotationDict = {'BankName', 'CurrencyName', 'TimeStamp', 'SE_Bid', 'SE_Ask', 'BN_Bid', 'BN_Ask'}
                     QuotationDictTmp = QuotationDict()
@@ -81,7 +80,6 @@ class TLCB:
                     QuotationDictTmp.BN_Ask = row['cashSellPrice']
                     QuotationDictTmp.CurrencyUnit = 100
 
-                    print(QuotationDictTmp.__dict__)
                     QuotationList.append(QuotationDictTmp)
                 else:
                     print('table fault')
@@ -90,4 +88,5 @@ class TLCB:
             except IndexError:
 
                 break
+        print('TLCB Spider RownNum_' + str(len(text['cd']['exchangeRateList'])) + ' is endness.')
         return QuotationList

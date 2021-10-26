@@ -17,6 +17,7 @@ import datetime
 import re
 
 from BCHO import BCHO
+from ICBC import ICBC
 from NBCB import NBCB
 from QuotationDB import QuotationDB
 from TLCB import TLCB
@@ -35,20 +36,14 @@ class FXQuotationSpider:
             NBCBInstance = NBCB()
             NBCBInstance.setSleepTime(5)
 
+            ICBCInstance = ICBC()
+            ICBCInstance.setSleepTime(5)
+
             TLCBInstance = TLCB()
             TLCBInstance.setSleepTime(5)
 
             with ThreadPoolExecutor(max_workers=8) as TPool:  # 创建一个最大容纳数量为5的线程池
-
-                BCHOFuture = TPool.submit(BCHOInstance.getQuotation)
-                NBCBFuture = TPool.submit(NBCBInstance.getQuotation)
-                TLCBFuture = TPool.submit(TLCBInstance.getQuotation)
-
-                print('beginning')
-
-                self.QuotationList += BCHOFuture.result()
-                self.QuotationList += NBCBFuture.result()
-                self.QuotationList += TLCBFuture.result()
+                print('FXQuotationSpider beginning.')
 
                 ##QuotationDB.addQuotationtoDB(self.QuotationList)
 
@@ -56,29 +51,32 @@ class FXQuotationSpider:
                     self.QuotationList = []
 
                     BCHOFuture = TPool.submit(BCHOInstance.getQuotation)
+                    ICBCFuture = TPool.submit(ICBCInstance.getQuotation)
                     NBCBFuture = TPool.submit(NBCBInstance.getQuotation)
                     TLCBFuture = TPool.submit(TLCBInstance.getQuotation)
 
                     self.QuotationList += BCHOFuture.result()
+                    self.QuotationList += ICBCFuture.result()
                     self.QuotationList += NBCBFuture.result()
                     self.QuotationList += TLCBFuture.result()
 
-                    BCHO_SE_Bid = 0
-                    TLCB_SE_Bid = 0
+                    SE_BidDict = {}
+
                     for QuotationDictCell in self.QuotationList:
                         try:
-                            if QuotationDictCell.BankName == 'BCHO' and QuotationDictCell.CurrencyCode == 'USD':
-                                BCHO_SE_Bid = QuotationDictCell.SE_Bid
-                            elif QuotationDictCell.BankName == 'TLCB' and QuotationDictCell.CurrencyCode == 'USD':
-                                TLCB_SE_Bid = QuotationDictCell.SE_Bid
+                            if QuotationDictCell.CurrencyCode == 'USD':
+                                SE_BidDict[QuotationDictCell.BankName] = QuotationDictCell.SE_Bid
                             else:
                                 pass
                         except:
                             break
-                    spread = round((float(TLCB_SE_Bid) - float(BCHO_SE_Bid)) * 100)
+
+                    spread = round((float(SE_BidDict.get('BCHO')) - float(SE_BidDict.get('TLCB'))) * 100)
                     print(datetime.datetime.now())
-                    print('中国银行美元结汇价格：' + BCHO_SE_Bid + '；泰隆银行美元结汇价格：' + TLCB_SE_Bid + '；泰隆银行价格好：' + str(
-                        spread) + 'pips。')
+                    print('中国银行美元结汇价格：' + SE_BidDict.get('BCHO') + '；')
+                    print('中国工商银行美元结汇价格：' + SE_BidDict.get('ICBC') + '；')
+                    print('宁波银行美元结汇价格：' + SE_BidDict.get('NBCB') + '；')
+                    print('泰隆银行美元结汇价格：' + SE_BidDict.get('TLCB') + '；泰隆银行价格比中国银行好：' + str(spread) + 'pips。')
 
                     time.sleep(30)
 
