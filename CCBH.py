@@ -4,65 +4,103 @@
 # 
 
 import datetime
+import json
 import os
+import time
 import time as tm
+import xml
+from xml.dom.minidom import parseString
 
 import requests
 from scrapy.selector import Selector
 
+from QuotationDict import QuotationDict
+
 
 class CCBH:
-    outputmes = ''
+    CurrencyNameList = ['826', '978', '840', '392', '344', '124', '036']
+    CurrencyCodeList = ['GBP', 'EUR', 'USD', 'JPY', 'HKD', 'CAD', 'AUD']
 
-    CurrencyName = ['英镑', '欧元', '美元', '日元', '港币', '加拿大元', '澳大利亚元']
-    CurrencyCode = ['GBP', 'EUR', 'USD', 'JPY', 'HKD', 'CAD', 'AUD']
     SleepTime = -1
+    EndRow = 64
 
     def __init__(self):
 
-        self.outputmes = ''
+        self.SleepTime = -1
 
-    def setSleepTime(sleeptime):
-        try:
-            sleeptime = input("多久刷新一次(s): ")
-            if sleeptime == '':
-                sleeptime = 120
-                print("已按照默认设置刷新(120s)\n")
-            else:
-                sleeptime = int(sleeptime)
-        except:
-            print("输入有误,请重新输入.\n")
+    def setSleepTime(self, sleeptime):
+        if sleeptime != '':
+            self.SleepTime = sleeptime
+            print("已按照默认设置刷新(120s)\n")
+        else:
+            self.SleepTime = -1
+
+    def QuotationFlow(self, QuotationList):
+        while True:
+            a = self.getQuotation()
+            QuotationList += a
+
+            print(self.SleepTime)
+            time.sleep(self.SleepTime)
 
     def getQuotation(self):
         error_times = 0
         try:
-            r = requests.post('http://www1.ccb.com/cn/forex/exchange-quotations.html')
-            print(r.text)
+            r = requests.get('http://www1.ccb.com/cn/home/news/jshckpj_new.xml')
+            r.encoding = "utf-8"
         except:
             print("Internet Error, waiting 2s.\n")
             error_times += 1
             tm.sleep(2)
             while error_times <= 3:
-                r = requests.post('https://srh.bankofchina.com/search/whpj/search_cn.jsp',
-                                  data={'erectDate': erectDate, 'nothing': nothing, 'pjname': str(FX[i]),
-                                        'page': str(page)})
+                r = requests.get('http://www1.ccb.com/cn/home/news/jshckpj_new.xml')
             else:
                 print("Retry 3 times, break!")
                 exit()
-
         html = r.text
+        xml_dom = parseString(html)
 
-        print(html)
+        QuotationList = []
 
-        for row in range(2, end):
+        for row in xml_dom.getElementsByTagName("ReferencePriceSettlement"):
             try:
-                SE_B = Selector(text=html).xpath('//tr[%i]/td[2]/text()' % (row)).extract()[0]
-                BN_B = Selector(text=html).xpath('//tr[%i]/td[3]/text()' % (row)).extract()[0]
-                SE_A = Selector(text=html).xpath('//tr[%i]/td[4]/text()' % (row)).extract()[0]
-                BN_A = Selector(text=html).xpath('//tr[%i]/td[5]/text()' % (row)).extract()[0]
-                time = Selector(text=html).xpath('//tr[%i]/td[7]/text()' % (row)).extract()[0].replace('.', '-')
-                output.append(eval(sort))
+                if len(row.getElementsByTagName('Ofrd_Ccy_CcyCd')) and len(
+                        row.getElementsByTagName('Ofr_Ccy_CcyCd')) and len(
+                    row.getElementsByTagName('BidRateOfCash')) and len(
+                    row.getElementsByTagName('OfrRateOfCash')) and len(
+                    row.getElementsByTagName('BidRateOfCcy')) and len(
+                    row.getElementsByTagName('OfrRateOfCcy')) and len(
+                    row.getElementsByTagName('HBBnk_Bss_Buy_Prc')) and len(
+                    row.getElementsByTagName('HBBnk_Bss_Sell_Prc')) and len(
+                    row.getElementsByTagName('Mdl_ExRt_Prc')) and len(row.getElementsByTagName('LstPr_Dt')) and len(
+                    row.getElementsByTagName('LstPr_Tm')) and len(
+                    row.getElementsByTagName('ExRt_StCd')):
+
+                    # QuotationDict = {'BankName', 'CurrencyName', 'TimeStamp', 'SE_Bid', 'SE_Ask', 'BN_Bid', 'BN_Ask'}
+                    QuotationDictTmp = QuotationDict()
+                    QuotationDictTmp.BankName = 'CCBH'
+                    QuotationDictTmp.CurrencyCode = row.getElementsByTagName('Ofrd_Ccy_CcyCd')[0].childNodes[
+                        0].nodeValue
+                    QuotationDictTmp.TimeStamp = datetime.datetime.strptime(
+                        row.getElementsByTagName('LstPr_Dt')[0].childNodes[0].nodeValue + '_' +
+                        row.getElementsByTagName('LstPr_Tm')[0].childNodes[0].nodeValue, "%Y%m%d_%H%M%S")
+                    QuotationDictTmp.SE_Bid = row.getElementsByTagName('BidRateOfCcy')[0].childNodes[0].nodeValue
+                    QuotationDictTmp.SE_Ask = row.getElementsByTagName('OfrRateOfCcy')[0].childNodes[0].nodeValue
+                    QuotationDictTmp.BN_Bid = row.getElementsByTagName('BidRateOfCash')[0].childNodes[0].nodeValue
+                    QuotationDictTmp.BN_Ask = row.getElementsByTagName('OfrRateOfCash')[0].childNodes[0].nodeValue
+                    QuotationDictTmp.CurrencyUnit = 1
+
+                    if QuotationDictTmp.CurrencyCode in self.CurrencyNameList:
+                        QuotationDictTmp.CurrencyCode = self.CurrencyCodeList[
+                            self.CurrencyNameList.index(QuotationDictTmp.CurrencyCode)]
+                        QuotationList.append(QuotationDictTmp)
+                else:
+                    print('table fault')
+                    exit()
 
             except IndexError:
+
                 break
-        return self.outputmes
+        print('CCBH Spider RownNum_' + str(
+            len(xml_dom.getElementsByTagName("ReferencePriceSettlement"))) + ' is endness.')
+        return QuotationList

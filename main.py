@@ -23,7 +23,3 @@ if __name__ == '__main__':
 
     # See PyCharm help at https://www.jetbrains.com/help/pycharm/
     FXQuotationSpider().QuotationSpiderCommand('start')
-
-# ABCIInstance = ABCI()
-# ABCIInstance.setSleepTime(5)
-# ABCIInstance.getQuotation()

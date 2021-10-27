@@ -62,28 +62,23 @@ class ABCI:
                 print("Retry 3 times, break!")
                 exit()
         html = r.text
-
+        text = json.loads(html)
         QuotationList = []
-        print(html)
 
-        for row in html['Data']['Table']:
-            print(row)
+        for row in text['Data']['Table']:
 
             try:
-                if 'currencyType' in row and 'currencyCHName' in row and 'currencyENName' in row and 'reference' in row \
-                        and 'foreignBuy' in row and 'foreignSell' in row and 'cashBuy' in row and 'cashSell' in row \
-                        and 'publishDate' in row and 'publishTime' in row:
-
+                if 'BenchMarkPrice' in row and 'BuyingPrice' in row and 'SellPrice' in row and 'CashBuyingPrice' in row \
+                        and 'PublishTime' in row and 'Id' in row and 'CurrId' in row and 'CurrName' in row:
                     # QuotationDict = {'BankName', 'CurrencyName', 'TimeStamp', 'SE_Bid', 'SE_Ask', 'BN_Bid', 'BN_Ask'}
                     QuotationDictTmp = QuotationDict()
-                    QuotationDictTmp.BankName = 'ICBC'
-                    QuotationDictTmp.CurrencyCode = row['currencyENName']
-                    QuotationDictTmp.TimeStamp = datetime.datetime.strptime(
-                        row['publishDate'] + '_' + row['publishTime'], "%Y-%m-%d_%H:%M:%S")
-                    QuotationDictTmp.SE_Bid = row['foreignBuy']
-                    QuotationDictTmp.SE_Ask = row['foreignSell']
-                    QuotationDictTmp.BN_Bid = row['cashBuy']
-                    QuotationDictTmp.BN_Ask = row['cashSell']
+                    QuotationDictTmp.BankName = 'ABCI'
+                    QuotationDictTmp.CurrencyCode = row['CurrName'][-4:-1]
+                    QuotationDictTmp.TimeStamp = datetime.datetime.strptime(row['PublishTime'], "%Y-%m-%dT%H:%M:%S%z")
+                    QuotationDictTmp.SE_Bid = row['BuyingPrice']
+                    QuotationDictTmp.SE_Ask = row['SellPrice']
+                    QuotationDictTmp.BN_Bid = row['CashBuyingPrice']
+                    QuotationDictTmp.BN_Ask = row['SellPrice']
                     QuotationDictTmp.CurrencyUnit = 100
 
                     if QuotationDictTmp.CurrencyCode in self.CurrencyCodeList:
@@ -93,5 +88,5 @@ class ABCI:
                     exit()
             except IndexError:
                 break
-        print('ICBC Spider RownNum_' + str(len(text['data'])) + ' is endness.')
+        print('ABCI Spider RownNum_' + str(len(text['Data']['Table'])) + ' is endness.')
         return QuotationList

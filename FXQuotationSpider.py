@@ -16,7 +16,9 @@ from tqdm import tqdm
 import datetime
 import re
 
+from ABCI import ABCI
 from BCHO import BCHO
+from CCBH import CCBH
 from ICBC import ICBC
 from NBCB import NBCB
 from QuotationDB import QuotationDB
@@ -39,29 +41,41 @@ class FXQuotationSpider:
             ICBCInstance = ICBC()
             ICBCInstance.setSleepTime(5)
 
+            CCBHInstance = CCBH()
+            CCBHInstance.setSleepTime(5)
+
+            ABCIInstance = ABCI()
+            ABCIInstance.setSleepTime(5)
+
             TLCBInstance = TLCB()
             TLCBInstance.setSleepTime(5)
 
             with ThreadPoolExecutor(max_workers=8) as TPool:  # 创建一个最大容纳数量为5的线程池
                 print('FXQuotationSpider beginning.')
 
-                ##QuotationDB.addQuotationtoDB(self.QuotationList)
+
 
                 while True:
                     self.QuotationList = []
 
                     BCHOFuture = TPool.submit(BCHOInstance.getQuotation)
                     ICBCFuture = TPool.submit(ICBCInstance.getQuotation)
+                    ABCIFuture = TPool.submit(ABCIInstance.getQuotation)
+                    CCBHFuture = TPool.submit(CCBHInstance.getQuotation)
                     NBCBFuture = TPool.submit(NBCBInstance.getQuotation)
                     TLCBFuture = TPool.submit(TLCBInstance.getQuotation)
 
                     self.QuotationList += BCHOFuture.result()
                     self.QuotationList += ICBCFuture.result()
+                    self.QuotationList += ABCIFuture.result()
+                    self.QuotationList += CCBHFuture.result()
                     self.QuotationList += NBCBFuture.result()
-                    self.QuotationList += TLCBFuture.result()
+                    # self.QuotationList += TLCBFuture.result()
+
+                    QuotationDB.addQuotationtoDB(self.QuotationList)
 
                     SE_BidDict = {}
-
+                    spread = {}
                     for QuotationDictCell in self.QuotationList:
                         try:
                             if QuotationDictCell.CurrencyCode == 'USD':
@@ -73,15 +87,19 @@ class FXQuotationSpider:
 
                     print(datetime.datetime.now())
                     print('中国银行美元结汇价格：' + SE_BidDict.get('BCHO') + '；')
-                    spread_BCHO = round(float(SE_BidDict.get('TLCB')) * 100 - float(SE_BidDict.get('BCHO')) * 100)
+                    # spread['BCHO'] = round(float(SE_BidDict.get('TLCB')) * 100 - float(SE_BidDict.get('BCHO')) * 100)
                     print('中国工商银行美元结汇价格：' + SE_BidDict.get('ICBC') + '；')
-                    spread_ICBC = round(float(SE_BidDict.get('TLCB')) * 100 - float(SE_BidDict.get('ICBC')) * 100)
+                    # spread['ICBC'] = round(float(SE_BidDict.get('TLCB')) * 100 - float(SE_BidDict.get('ICBC')) * 100)
+                    print('中国建设银行美元结汇价格：' + SE_BidDict.get('CCBH') + '；')
+                    # spread['ICBC'] = round(float(SE_BidDict.get('TLCB')) * 100 - float(SE_BidDict.get('CCBH')) * 100)
+                    print('中国农业银行美元结汇价格：' + SE_BidDict.get('ABCI') + '；')
+                    # spread['ICBC'] = round(float(SE_BidDict.get('TLCB')) * 100 - float(SE_BidDict.get('ABCI')) * 100)
                     print('宁波银行美元结汇价格：' + SE_BidDict.get('NBCB') + '；')
-                    spread_NBCB = round(float(SE_BidDict.get('TLCB')) * 100 - float(SE_BidDict.get('NBCB')) * 100)
+                    # spread['NBCB'] = round(float(SE_BidDict.get('TLCB')) * 100 - float(SE_BidDict.get('NBCB')) * 100)
                     print('泰隆银行美元结汇价格：' + SE_BidDict.get('TLCB') + '；泰隆银行价格比中国银行好：' + str(
-                        spread_BCHO) + 'pips；泰隆银行价格比中国工商银行好：' + str(
-                        spread_ICBC) + 'pips；泰隆银行价格比宁波银行好：' + str(
-                        spread_NBCB) + 'pips。')
+                        spread['BCHO']) + 'pips；泰隆银行价格比中国工商银行好：' + str(
+                        spread['ICBC']) + 'pips；泰隆银行价格比宁波银行好：' + str(
+                        spread['NBCB']) + 'pips。')
 
                     time.sleep(30)
 
