@@ -53,8 +53,6 @@ class FXQuotationSpider:
             with ThreadPoolExecutor(max_workers=8) as TPool:  # 创建一个最大容纳数量为5的线程池
                 print('FXQuotationSpider beginning.')
 
-
-
                 while True:
                     self.QuotationList = []
 
@@ -70,16 +68,18 @@ class FXQuotationSpider:
                     self.QuotationList += ABCIFuture.result()
                     self.QuotationList += CCBHFuture.result()
                     self.QuotationList += NBCBFuture.result()
-                    # self.QuotationList += TLCBFuture.result()
+                    self.QuotationList += TLCBFuture.result()
 
                     QuotationDB.addQuotationtoDB(self.QuotationList)
 
                     SE_BidDict = {}
+                    CurrencyUnit = {}
                     spread = {}
                     for QuotationDictCell in self.QuotationList:
                         try:
                             if QuotationDictCell.CurrencyCode == 'USD':
                                 SE_BidDict[QuotationDictCell.BankName] = QuotationDictCell.SE_Bid
+                                CurrencyUnit[QuotationDictCell.BankName] = QuotationDictCell.CurrencyUnit
                             else:
                                 pass
                         except:
@@ -87,18 +87,22 @@ class FXQuotationSpider:
 
                     print(datetime.datetime.now())
                     print('中国银行美元结汇价格：' + SE_BidDict.get('BCHO') + '；')
-                    # spread['BCHO'] = round(float(SE_BidDict.get('TLCB')) * 100 - float(SE_BidDict.get('BCHO')) * 100)
+                    spread['BCHO'] = round(float(SE_BidDict.get('TLCB')) * 100 - float(SE_BidDict.get('BCHO')) * 100)
                     print('中国工商银行美元结汇价格：' + SE_BidDict.get('ICBC') + '；')
-                    # spread['ICBC'] = round(float(SE_BidDict.get('TLCB')) * 100 - float(SE_BidDict.get('ICBC')) * 100)
+                    spread['ICBC'] = round(float(SE_BidDict.get('TLCB')) * 100 - float(SE_BidDict.get('ICBC')) * 100)
                     print('中国建设银行美元结汇价格：' + SE_BidDict.get('CCBH') + '；')
-                    # spread['ICBC'] = round(float(SE_BidDict.get('TLCB')) * 100 - float(SE_BidDict.get('CCBH')) * 100)
+                    spread['CCBH'] = round(float(SE_BidDict.get('TLCB')) * 10000 / CurrencyUnit['TLCB'] - float(
+                        SE_BidDict.get('CCBH')) * 10000 / CurrencyUnit['CCBH'])
                     print('中国农业银行美元结汇价格：' + SE_BidDict.get('ABCI') + '；')
-                    # spread['ICBC'] = round(float(SE_BidDict.get('TLCB')) * 100 - float(SE_BidDict.get('ABCI')) * 100)
+                    spread['ABCI'] = round(float(SE_BidDict.get('TLCB')) * 10000 / CurrencyUnit['TLCB'] - float(
+                        SE_BidDict.get('ABCI')) * 10000 / CurrencyUnit['ABCI'])
                     print('宁波银行美元结汇价格：' + SE_BidDict.get('NBCB') + '；')
-                    # spread['NBCB'] = round(float(SE_BidDict.get('TLCB')) * 100 - float(SE_BidDict.get('NBCB')) * 100)
+                    spread['NBCB'] = round(float(SE_BidDict.get('TLCB')) * 100 - float(SE_BidDict.get('NBCB')) * 100)
                     print('泰隆银行美元结汇价格：' + SE_BidDict.get('TLCB') + '；泰隆银行价格比中国银行好：' + str(
                         spread['BCHO']) + 'pips；泰隆银行价格比中国工商银行好：' + str(
-                        spread['ICBC']) + 'pips；泰隆银行价格比宁波银行好：' + str(
+                        spread['ICBC']) + 'pips；泰隆银行价格比中国建设银行好：' + str(
+                        spread['CCBH']) + 'pips；泰隆银行价格比中国农业银行好：' + str(
+                        spread['ABCI']) + 'pips；泰隆银行价格比宁波银行好：' + str(
                         spread['NBCB']) + 'pips。')
 
                     time.sleep(30)

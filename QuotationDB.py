@@ -13,10 +13,10 @@ class QuotationDB:
     def DBConnect(self):
         try:
             conn = mysql.connector.connect(
-                host='192.168.31.149',
+                host='127.0.0.1',
                 port=3306,
-                user='poseidon',
-                passwd='Apollo!9880707',
+                user='root',
+                passwd='TLCB2021',
                 database='FXQuotationSpider',
                 charset='utf8'
             )
