@@ -74,7 +74,8 @@ class ABCI:
                     QuotationDictTmp = QuotationDict()
                     QuotationDictTmp.BankName = 'ABCI'
                     QuotationDictTmp.CurrencyCode = row['CurrName'][-4:-1]
-                    QuotationDictTmp.TimeStamp = datetime.datetime.strptime(row['PublishTime'], "%Y-%m-%dT%H:%M:%S%z")
+                    QuotationDictTmp.TimeStamp = datetime.datetime.strptime(row['PublishTime'].split('+')[0],
+                                                                            "%Y-%m-%dT%H:%M:%S")
                     QuotationDictTmp.SE_Bid = row['BuyingPrice']
                     QuotationDictTmp.SE_Ask = row['SellPrice']
                     QuotationDictTmp.BN_Bid = row['CashBuyingPrice']

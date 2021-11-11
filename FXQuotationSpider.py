@@ -28,8 +28,6 @@ from TLCB import TLCB
 class FXQuotationSpider:
     QuotationList = []
 
-    # QuotationList.extend(BCHOInstance.getQuotation())
-    # QuotationList.extend(NBCBInstance.getQuotation())
     def QuotationSpiderCommand(self, command):
         if command == 'start':
             BCHOInstance = BCHO()
@@ -50,7 +48,7 @@ class FXQuotationSpider:
             TLCBInstance = TLCB()
             TLCBInstance.setSleepTime(5)
 
-            with ThreadPoolExecutor(max_workers=8) as TPool:  # 创建一个最大容纳数量为5的线程池
+            with ThreadPoolExecutor(max_workers=8) as TPool:  # 创建一个最大容纳数量为8的线程池
                 print('FXQuotationSpider beginning.')
 
                 while True:
